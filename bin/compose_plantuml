@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+from compose_plantuml import ComposePlantuml, VersionException
+
+
+if __name__ == '__main__':
+
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--replace', action='store_const', const=True,
+        help='should the original file be replaced?', default=False)
+    parser.add_argument(
+        '--ignore_changes', action='store_const', const=False,
+        help='ignore changes for return code', default=True)
+    parser.add_argument(
+        '--non_strict', action='store_const', const=True,
+        help='if this is provided, unknown keys errors are ignored', default=False)
+    parser.add_argument('files', nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    plantuml = ComposePlantuml()
+
+    if len(args.files) == 0:
+        assert args.replace is False, 'replace makes no sense when reading from stdin'
+
+        data = sys.stdin.read()
+        formatted = plantuml.print_links(data)
+
+    for path in args.files:
+        try:
+            plantuml.print_links_from_file(path)
+        except VersionException as exception:
+            print('docker-compose version exception: {}'.format(exception.message))
+            sys.exit(1)
