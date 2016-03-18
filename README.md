@@ -47,3 +47,11 @@ When calling 'compose_plantuml docker-compose.yml' it will generate the followin
 [second]
 [first] --> [second]
 ```
+
+## Related Links
+
+ - draw compose
+   - https://github.com/Alexis-benoist/draw-compose
+   - generates dot graphs from docker-compose files
+   - currently just supports docker-compose version 1
+   - does not read from stdin, so is not easy useable as docker container
