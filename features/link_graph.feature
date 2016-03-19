@@ -24,6 +24,7 @@ Feature: Link Graph
     Then it should fail with exactly:
       """
       docker-compose version exception: need version 2, but got 1
+
       """
 
   Scenario: Basic Link Graph
@@ -42,4 +43,24 @@ Feature: Link Graph
       [first]
       [second]
       [first] --> [second]
+
+      """
+
+  Scenario: Ignores Aliases
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        first:
+          links:
+            - second:second_alias
+        second: {}
+      """
+    When I run `bin/compose_plantuml compose.yml`
+    Then it should pass with exactly:
+      """
+      [first]
+      [second]
+      [first] --> [second]
+
       """

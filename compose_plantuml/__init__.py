@@ -17,9 +17,9 @@ class ComposePlantuml:
         self.require_version_2(compose)
 
         for component in sorted(self.components(compose)):
-            print('[{}]'.format(component))
+            print('[{0}]'.format(component))
         for source, destination in sorted(self.links(compose)):
-            print('[{}] --> [{}]'.format(source, destination))
+            print('[{0}] --> [{1}]'.format(source, destination))
 
     @staticmethod
     def components(compose):
@@ -33,15 +33,16 @@ class ComposePlantuml:
             component = compose['services'][component_name]
 
             for link in component.get('links', []):
+                link = link if ':' not in link else link.split(':')[0]
                 result.append((component_name, link))
         return result
 
     @staticmethod
     def require_version_2(compose):
         if 'version' not in compose:
-            raise VersionException('version not present in {}'.format(compose))
+            raise VersionException('version not present in {0}'.format(compose))
         if int(compose['version']) != 2:
-            raise VersionException('need version 2, but got {}'.format(compose['version']))
+            raise VersionException('need version 2, but got {0}'.format(compose['version']))
 
 
 class VersionException(Exception):

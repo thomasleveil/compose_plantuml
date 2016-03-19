@@ -25,4 +25,5 @@ setup(
     ],
     keywords='docker-compose plantuml docker yml',
     include_package_data=True,
-    scripts=['bin/compose_plantuml'])
+    scripts=['bin/compose_plantuml'],
+)
