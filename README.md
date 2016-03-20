@@ -18,12 +18,12 @@ Install it via:
 `pip3 install compose_plantuml`
 
 After that use it like:
-`compose_plantuml docker-compose.yml`
+`compose_plantuml --link-graph docker-compose.yml`
 
 ### Via Docker
 
 Use it like:
-`cat docker-compose.yml | docker run -i funkwerk/compose_plantuml`
+`cat docker-compose.yml | docker run -i funkwerk/compose_plantuml --link-graph`
 
 ## Link Graph
 
@@ -51,6 +51,33 @@ When calling 'compose_plantuml docker-compose.yml' it will generate the followin
 Rendered it looks like:
 
 <img src="https://cdn.rawgit.com/funkwerk/compose_plantuml/master/img/link_graph.svg">
+
+## Boundaries
+
+Boundaries visualize the external boundaries a system has.
+
+Consider the following docker-compose.yml
+
+```
+version: '2'
+services:
+  service:
+    ports:
+      - 8080:80
+```
+
+When calling 'compose_plantuml --boundaries docker-compose.yml' it will generate the following plantuml:
+
+```
+rectangle system {
+  [service]
+}
+[service] --> 8080 : 80
+```
+
+Rendered it looks like:
+
+<img src="https://cdn.rawgit.com/funkwerk/compose_plantuml/master/img/boundaries.svg">
 
 ## Related Links
 

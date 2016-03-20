@@ -7,19 +7,34 @@ class ComposePlantuml:
     def __init__(self):
         pass
 
-    def print_links_from_file(self, path):
-        with open(path, 'r') as file:
-            self.print_links(file.read())
-
-    def print_links(self, data):
+    def parse(self, data):
         compose = load(data)
 
         self.require_version_2(compose)
+        return compose
+
+    def link_graph(self, compose):
+        result = 'skinparam componentStyle uml2\n'
 
         for component in sorted(self.components(compose)):
-            print('[{0}]'.format(component))
+            result += '[{0}]\n'.format(component)
         for source, destination in sorted(self.links(compose)):
-            print('[{0}] --> [{1}]'.format(source, destination))
+            result += '[{0}] --> [{1}]\n'.format(source, destination)
+        return result.strip()
+
+    def boundaries(self, compose):
+        result = 'skinparam componentStyle uml2\n'
+
+        result += 'rectangle system {\n'
+        for component in sorted(self.components(compose)):
+            result += '  [{0}]\n'.format(component)
+        result += '}\n'
+        for service, host, container in sorted(self.ports(compose)):
+            port = host
+            if container is not None:
+                port = '{0} : {1}'.format(host, container)
+            result += '[{0}] --> {1}\n'.format(service, port)
+        return result.strip()
 
     @staticmethod
     def components(compose):
@@ -35,6 +50,21 @@ class ComposePlantuml:
             for link in component.get('links', []):
                 link = link if ':' not in link else link.split(':')[0]
                 result.append((component_name, link))
+        return result
+
+    @staticmethod
+    def ports(compose):
+        result = []
+
+        for component_name in compose.get('services', []):
+            component = compose['services'][component_name]
+
+            for port in component.get('ports', []):
+                port = str(port)
+                host, container = (port, None)
+                if ':' in port:
+                    host, container = port.split(':')
+                result.append((component_name, host, container))
         return result
 
     @staticmethod

@@ -9,31 +9,36 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--replace', action='store_const', const=True,
-        help='should the original file be replaced?', default=False, )
+        '--link-graph', action='store_const', const=True,
+        help='prints a link graph', default=False, )
     parser.add_argument(
-        '--ignore_changes', action='store_const', const=False,
-        help='ignore changes for return code',
-        default=True,
-    )
-    parser.add_argument(
-        '--non_strict', action='store_const', const=True,
-        help='if this is provided, unknown keys errors are ignored',
+        '--boundaries', action='store_const', const=True,
+        help='prints the system boundaries',
         default=False,
     )
     parser.add_argument('files', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     plantuml = ComposePlantuml()
 
-    if len(args.files) == 0:
-        assert args.replace is False, 'replace makes no sense when reading from stdin'
+    if not args.link_graph and not args.boundaries:
+        print('specify an output option. link_graph or boundaries')
+        sys.exit(1)
 
-        data = sys.stdin.read()
-        formatted = plantuml.print_links(data)
-
-    for path in args.files:
+    def execute(data):
         try:
-            plantuml.print_links_from_file(path)
+            parsed = plantuml.parse(data)
         except VersionException as exception:
             print('docker-compose version exception: {0}'.format(exception.message))
             sys.exit(1)
+
+        if args.link_graph:
+            print(plantuml.link_graph(parsed))
+        if args.boundaries:
+            print(plantuml.boundaries(parsed))
+
+    if len(args.files) == 0:
+        execute(sys.stdin.read())
+
+    for path in args.files:
+        with open(path, 'r') as file:
+            execute(file.read())
