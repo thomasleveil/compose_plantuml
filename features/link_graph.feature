@@ -42,3 +42,22 @@ Feature: Link Graph
       [first] --> [second]
 
       """
+
+  Scenario: Suppport for legacy docker-compose format
+    Given a file named "compose.yml" with:
+      """
+      first:
+        links:
+          - second
+      second: {}
+      """
+    When I run `bin/compose_plantuml --link-graph compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      [first]
+      [second]
+      [first] --> [second]
+
+      """
+

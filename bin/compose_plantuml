@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from compose_plantuml import ComposePlantuml, VersionException
+from compose_plantuml import ComposePlantuml
 
 
 if __name__ == '__main__':
@@ -25,11 +25,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     def execute(data):
-        try:
-            parsed = plantuml.parse(data)
-        except VersionException as exception:
-            print('docker-compose version exception: {0}'.format(exception.message))
-            sys.exit(1)
+        parsed = plantuml.parse(data)
 
         if args.link_graph:
             print(plantuml.link_graph(parsed))

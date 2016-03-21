@@ -8,7 +8,7 @@
 
 Generate Plantuml graphs from docker-compose files
 
-Currently just docker-compose version 2 is supported.
+Note that version 2 as well as the legacy version is supported.
 
 ## Usage
 

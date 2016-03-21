@@ -42,3 +42,21 @@ Feature: Boundaries
       [service] --> 8080 : 80
 
       """
+
+  Scenario: Suppport for legacy docker-compose format
+    Given a file named "compose.yml" with:
+      """
+      service:
+        ports:
+          - 8080:80
+      """
+    When I run `bin/compose_plantuml --boundaries compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      rectangle system {
+        [service]
+      }
+      [service] --> 8080 : 80
+
+      """

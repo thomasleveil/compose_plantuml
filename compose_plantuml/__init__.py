@@ -8,10 +8,7 @@ class ComposePlantuml:
         pass
 
     def parse(self, data):
-        compose = load(data)
-
-        self.require_version_2(compose)
-        return compose
+        return load(data)
 
     def link_graph(self, compose):
         result = 'skinparam componentStyle uml2\n'
@@ -38,15 +35,16 @@ class ComposePlantuml:
 
     @staticmethod
     def components(compose):
+        if 'version' not in compose:
+            return [component for component in compose]
         return [component for component in compose.get('services', [])]
 
     @staticmethod
     def links(compose):
         result = []
+        components = compose if 'version' not in compose else compose.get('services', [])
 
-        for component_name in compose.get('services', []):
-            component = compose['services'][component_name]
-
+        for component_name, component in components.items():
             for link in component.get('links', []):
                 link = link if ':' not in link else link.split(':')[0]
                 result.append((component_name, link))
@@ -55,10 +53,9 @@ class ComposePlantuml:
     @staticmethod
     def ports(compose):
         result = []
+        components = compose if 'version' not in compose else compose.get('services', [])
 
-        for component_name in compose.get('services', []):
-            component = compose['services'][component_name]
-
+        for component_name, component in components.items():
             for port in component.get('ports', []):
                 port = str(port)
                 host, container = (port, None)
@@ -66,16 +63,3 @@ class ComposePlantuml:
                     host, container = port.split(':')
                 result.append((component_name, host, container))
         return result
-
-    @staticmethod
-    def require_version_2(compose):
-        if 'version' not in compose:
-            raise VersionException('version not present in {0}'.format(compose))
-        if int(compose['version']) != 2:
-            raise VersionException('need version 2, but got {0}'.format(compose['version']))
-
-
-class VersionException(Exception):
-
-    def __init__(self, message):
-        self.message = message
