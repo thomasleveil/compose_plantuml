@@ -9,4 +9,4 @@ COPY ["features/*.feature", "Dockerfile", "README.md", "/"]
 
 RUN chmod +x /bin/compose_plantuml
 
-ENTRYPOINT python3 /bin/compose_plantuml
+ENTRYPOINT ['python3', '/bin/compose_plantuml']
