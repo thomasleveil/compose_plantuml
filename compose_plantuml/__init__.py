@@ -37,6 +37,10 @@ class ComposePlantuml:
             if container is not None:
                 port = '{0} : {1}'.format(host, container)
             result += '[{0}] --> {1}\n'.format(service, port)
+
+        for volume in sorted(self.volumes(compose)):
+            for service, volume_path in sorted(self.service_using_path(compose, volume)):
+                result += '[{0}] --> [{1}]\n'.format(service, volume_path)
         return result.strip()
 
     @staticmethod
@@ -88,4 +92,16 @@ class ComposePlantuml:
                 if not volume_name.startswith('{0}:'.format(volume)):
                     continue
                 result.append(volume_name.split(':')[1])
+        return result
+
+    @staticmethod
+    def service_using_path(compose, volume):
+        result = []
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for component_name, component in components.items():
+            for volume_name in component.get('volumes', {}):
+                if not volume_name.startswith('{0}:'.format(volume)):
+                    continue
+                result.append((component_name, volume_name.split(':')[1]))
         return result

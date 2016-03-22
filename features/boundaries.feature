@@ -67,6 +67,7 @@ Feature: Boundaries
         [/log]
       }
       [service] --> 8080 : 80
+      [service] --> [/log]
 
       """
 
