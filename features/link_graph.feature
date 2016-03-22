@@ -43,6 +43,26 @@ Feature: Link Graph
 
       """
 
+  Scenario: Supports Dependencies
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        first:
+          depends_on:
+            - second
+        second: {}
+      """
+    When I run `bin/compose_plantuml --link-graph compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      [first]
+      [second]
+      [first] ..> [second] : depends on
+
+      """
+
   Scenario: Suppport for legacy docker-compose format
     Given a file named "compose.yml" with:
       """

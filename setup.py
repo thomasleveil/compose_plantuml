@@ -7,7 +7,7 @@ def readme():
 
 setup(
     name='compose_plantuml',
-    version='0.0.5',
+    version='0.0.6',
     description='converts docker-compose into plantuml',
     long_description=readme(),
     url='http://github.com/funkwerk/compose_plantuml',

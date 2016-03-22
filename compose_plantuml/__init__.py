@@ -17,6 +17,8 @@ class ComposePlantuml:
             result += '[{0}]\n'.format(component)
         for source, destination in sorted(self.links(compose)):
             result += '[{0}] --> [{1}]\n'.format(source, destination)
+        for source, destination in sorted(self.dependencies(compose)):
+            result += '[{0}] ..> [{1}] : depends on\n'.format(source, destination)
         return result.strip()
 
     def boundaries(self, compose):
@@ -58,6 +60,16 @@ class ComposePlantuml:
             for link in component.get('links', []):
                 link = link if ':' not in link else link.split(':')[0]
                 result.append((component_name, link))
+        return result
+
+    @staticmethod
+    def dependencies(compose):
+        result = []
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for component_name, component in components.items():
+            for dependency in component.get('depends_on', []):
+                result.append((component_name, dependency))
         return result
 
     @staticmethod
