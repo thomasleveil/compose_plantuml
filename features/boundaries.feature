@@ -49,8 +49,6 @@ Feature: Boundaries
       version: "2"
       services:
         service:
-          ports:
-            - 8080:80
           volumes:
             - service_log:/log
       volumes:
@@ -66,7 +64,6 @@ Feature: Boundaries
       database service_log {
         [/log]
       }
-      [service] --> 8080 : 80
       [service] --> [/log]
 
       """
