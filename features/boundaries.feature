@@ -43,6 +43,33 @@ Feature: Boundaries
 
       """
 
+  Scenario: Volumes
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          ports:
+            - 8080:80
+          volumes:
+            - service_log:/log
+      volumes:
+        service_log: {}
+      """
+    When I run `bin/compose_plantuml --boundaries compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      database service_log {
+        [/log]
+      }
+      [service] --> 8080 : 80
+
+      """
+
   Scenario: Suppport for legacy docker-compose format
     Given a file named "compose.yml" with:
       """

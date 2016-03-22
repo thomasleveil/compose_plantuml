@@ -26,6 +26,12 @@ class ComposePlantuml:
         for component in sorted(self.components(compose)):
             result += '  [{0}]\n'.format(component)
         result += '}\n'
+        for volume in sorted(self.volumes(compose)):
+            result += 'database {0}'.format(volume) + ' {\n'
+            for usage in sorted(self.volume_usage(compose, volume)):
+                result += '  [{0}]\n'.format(usage)
+            result += '}\n'
+
         for service, host, container in sorted(self.ports(compose)):
             port = host
             if container is not None:
@@ -42,7 +48,7 @@ class ComposePlantuml:
     @staticmethod
     def links(compose):
         result = []
-        components = compose if 'version' not in compose else compose.get('services', [])
+        components = compose if 'version' not in compose else compose.get('services', {})
 
         for component_name, component in components.items():
             for link in component.get('links', []):
@@ -53,7 +59,7 @@ class ComposePlantuml:
     @staticmethod
     def ports(compose):
         result = []
-        components = compose if 'version' not in compose else compose.get('services', [])
+        components = compose if 'version' not in compose else compose.get('services', {})
 
         for component_name, component in components.items():
             for port in component.get('ports', []):
@@ -62,4 +68,24 @@ class ComposePlantuml:
                 if ':' in port:
                     host, container = port.split(':')
                 result.append((component_name, host, container))
+        return result
+
+    @staticmethod
+    def volumes(compose):
+        if 'version' not in compose:
+            return []  # TODO: support for version 1
+        volumes = compose.get('volumes', {})
+
+        return list(volumes.keys())
+
+    @staticmethod
+    def volume_usage(compose, volume):
+        result = []
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for component_name, component in components.items():
+            for volume_name in component.get('volumes', {}):
+                if not volume_name.startswith('{0}:'.format(volume)):
+                    continue
+                result.append(volume_name.split(':')[1])
         return result
