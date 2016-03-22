@@ -28,10 +28,13 @@ class ComposePlantuml:
         for component in sorted(self.components(compose)):
             result += '  [{0}]\n'.format(component)
         result += '}\n'
+        volume_registry = {}
         for volume in sorted(self.volumes(compose)):
             result += 'database {0}'.format(volume) + ' {\n'
             for usage in sorted(self.volume_usage(compose, volume)):
-                result += '  [{0}]\n'.format(usage)
+                registry_name = 'volume_{0}'.format(len(volume_registry.keys()) + 1)
+                volume_registry['{0}.{1}'.format(volume, usage)] = registry_name
+                result += '  [{0}] as {1}\n'.format(usage, registry_name)
             result += '}\n'
 
         for service, host, container in sorted(self.ports(compose)):
@@ -42,7 +45,10 @@ class ComposePlantuml:
 
         for volume in sorted(self.volumes(compose)):
             for service, volume_path in sorted(self.service_using_path(compose, volume)):
-                result += '[{0}] --> [{1}]\n'.format(service, volume_path)
+                name = volume_path
+                if '{0}.{1}'.format(volume, volume_path) in volume_registry:
+                    name = volume_registry['{0}.{1}'.format(volume, volume_path)]
+                result += '[{0}] --> {1}\n'.format(service, name)
         return result.strip()
 
     @staticmethod

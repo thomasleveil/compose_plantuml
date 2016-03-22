@@ -62,9 +62,9 @@ Feature: Boundaries
         [service]
       }
       database service_log {
-        [/log]
+        [/log] as volume_1
       }
-      [service] --> [/log]
+      [service] --> volume_1
 
       """
 
