@@ -16,7 +16,7 @@ Feature: Boundaries
     Then it should pass with exactly:
       """
       skinparam componentStyle uml2
-      rectangle system {
+      cloud system {
         [service]
       }
       [service] --> 8080
@@ -36,7 +36,7 @@ Feature: Boundaries
     Then it should pass with exactly:
       """
       skinparam componentStyle uml2
-      rectangle system {
+      cloud system {
         [service]
       }
       [service] --> 8080 : 80
@@ -54,7 +54,7 @@ Feature: Boundaries
     Then it should pass with exactly:
       """
       skinparam componentStyle uml2
-      rectangle system {
+      cloud system {
         [service]
       }
       [service] --> 8080 : 80

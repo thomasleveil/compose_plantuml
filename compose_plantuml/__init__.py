@@ -22,7 +22,7 @@ class ComposePlantuml:
     def boundaries(self, compose):
         result = 'skinparam componentStyle uml2\n'
 
-        result += 'rectangle system {\n'
+        result += 'cloud system {\n'
         for component in sorted(self.components(compose)):
             result += '  [{0}]\n'.format(component)
         result += '}\n'
