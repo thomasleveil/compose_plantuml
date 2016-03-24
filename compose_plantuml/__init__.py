@@ -26,11 +26,14 @@ class ComposePlantuml:
 
         result += 'cloud system {\n'
         for component in sorted(self.components(compose)):
-            result += '  [{0}]\n'.format(component)
+            if self.has_service_external_ports(compose, component) or self.has_service_volumes(compose, component):
+                result += '  [{0}]\n'.format(component)
         result += '}\n'
         volume_registry = {}
 
         for volume in sorted(self.volumes(compose)):
+            if not self.is_volume_used(compose, volume):
+                continue
             result += 'database {0}'.format(volume) + ' {\n'
             for path in sorted(self.volume_usage(compose, volume)):
                 id = self.volume_identifier(volume, path)
@@ -55,6 +58,57 @@ class ComposePlantuml:
                     name = volume_registry['{0}.{1}'.format(volume, volume_path)]
                 result += '[{0}] --> {1}\n'.format(service, name)
         return result.strip()
+
+    @staticmethod
+    def is_volume_used(compose, volume):
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for _, component in components.items():
+            for volume_name in component.get('volumes', {}):
+                if volume_name.startswith('{0}:'.format(volume)):
+                    return True
+        return False
+
+    @staticmethod
+    def is_service_used(compose, service):
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for _, component in components.items():
+            for link in component.get('links', []):
+                link = link if ':' not in link else link.split(':')[0]
+                if link == service:
+                    return True
+
+            for dependency in component.get('depends_on', []):
+                if dependency == service:
+                    return True
+        return False
+
+    @staticmethod
+    def has_service_external_ports(compose, service):
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for name, component in components.items():
+            if service != name:
+                continue
+            return 'ports' in component
+        return False
+
+    @staticmethod
+    def has_service_volumes(compose, service):
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for name, component in components.items():
+            if service != name:
+                continue
+            if 'volumes' not in component:
+                return False
+            for volume in component['volumes']:
+                if volume.startswith('/'):
+                    continue
+                if ':' in volume:
+                    return True
+        return False
 
     @staticmethod
     def volume_identifier(volume, path):
