@@ -104,7 +104,7 @@ Feature: Boundaries
           volumes:
             - service_log:/log
           ports:
-           - 8080
+           - 8080:80
         unused_service: {}
       volumes:
         service_log: {}
@@ -125,7 +125,7 @@ Feature: Boundaries
       package ports {
         interface 8080
       }
-      [service] --> 8080
+      [service] --> 8080 : 80
       [service] --> volume_1
 
       """
