@@ -16,6 +16,11 @@ if __name__ == '__main__':
         help='prints the system boundaries',
         default=False,
     )
+    parser.add_argument(
+        '--group', action='store_const', const=True,
+        help='group similar properties together',
+        default=False,
+    )
     parser.add_argument('files', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     plantuml = ComposePlantuml()
@@ -30,7 +35,7 @@ if __name__ == '__main__':
         if args.link_graph:
             print(plantuml.link_graph(parsed))
         if args.boundaries:
-            print(plantuml.boundaries(parsed))
+            print(plantuml.boundaries(parsed, args.group))
 
     if len(args.files) == 0:
         execute(sys.stdin.read())

@@ -95,6 +95,41 @@ Feature: Boundaries
 
       """
 
+  Scenario: Group Volumes and Ports
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          ports:
+           - 8080
+        unused_service: {}
+      volumes:
+        service_log: {}
+        unused_volume: {}
+      """
+    When I run `bin/compose_plantuml --boundaries --group compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      package volumes {
+        database service_log {
+          [/log] as volume_1
+        }
+      }
+      package ports {
+        interface 8080
+      }
+      [service] --> 8080
+      [service] --> volume_1
+
+      """
+
   Scenario: Suppport for legacy docker-compose format
     Given a file named "compose.yml" with:
       """

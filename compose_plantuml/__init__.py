@@ -21,7 +21,7 @@ class ComposePlantuml:
             result += '[{0}] ..> [{1}] : depends on\n'.format(source, destination)
         return result.strip()
 
-    def boundaries(self, compose):
+    def boundaries(self, compose, group=False):
         result = 'skinparam componentStyle uml2\n'
 
         result += 'cloud system {\n'
@@ -31,25 +31,32 @@ class ComposePlantuml:
         result += '}\n'
         volume_registry = {}
 
+        volume_uml = ''
         for volume in sorted(self.volumes(compose)):
             if not self.is_volume_used(compose, volume):
                 continue
-            result += 'database {0}'.format(volume) + ' {\n'
+            volume_uml += 'database {0}'.format(volume) + ' {\n'
             for path in sorted(self.volume_usage(compose, volume)):
                 id = self.volume_identifier(volume, path)
 
                 if id in volume_registry:
                     continue
                 volume_registry[id] = 'volume_{0}'.format(len(volume_registry.keys()) + 1)
-                result += '  [{0}] as {1}\n'.format(path, volume_registry[id])
+                volume_uml += '  [{0}] as {1}\n'.format(path, volume_registry[id])
 
-            result += '}\n'
+            volume_uml += '}\n'
+        result += self.group('volumes', volume_uml) if group else volume_uml
 
+        port_uml = ''
+        port_links = ''
         for service, host, container in sorted(self.ports(compose)):
             port = host
             if container is not None:
                 port = '{0} : {1}'.format(host, container)
-            result += '[{0}] --> {1}\n'.format(service, port)
+            port_links += '[{0}] --> {1}\n'.format(service, port)
+            port_uml += 'interface {0}\n'.format(port)
+        result += self.group('ports', port_uml) if group else ''
+        result += port_links
 
         for volume in sorted(self.volumes(compose)):
             for service, volume_path in sorted(self.service_using_path(compose, volume)):
@@ -58,6 +65,12 @@ class ComposePlantuml:
                     name = volume_registry['{0}.{1}'.format(volume, volume_path)]
                 result += '[{0}] --> {1}\n'.format(service, name)
         return result.strip()
+
+    @staticmethod
+    def group(name, content):
+        if len(content) == 0:
+            return ''
+        return 'package {0} '.format(name) + '{\n  ' + '\n  '.join(content.split('\n')).strip() + '\n}\n'
 
     @staticmethod
     def is_volume_used(compose, volume):
