@@ -10,7 +10,7 @@ class ComposePlantuml:
     def parse(self, data):
         return load(data)
 
-    def link_graph(self, compose):
+    def link_graph(self, compose, notes=False):
         result = 'skinparam componentStyle uml2\n'
 
         for component in sorted(self.components(compose)):
@@ -19,9 +19,17 @@ class ComposePlantuml:
             result += '[{0}] --> [{1}]\n'.format(source, destination)
         for source, destination in sorted(self.dependencies(compose)):
             result += '[{0}] ..> [{1}] : depends on\n'.format(source, destination)
+        if notes:
+            for component_name in sorted(self.components(compose)):
+                component = self.component(compose, component_name)
+                if 'labels' in component:
+                    labels = []
+                    for key, value in component['labels'].items():
+                        labels.append('{0}={1}'.format(key, value))
+                    result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
         return result.strip()
 
-    def boundaries(self, compose, group=False):
+    def boundaries(self, compose, group=False, notes=False):
         result = 'skinparam componentStyle uml2\n'
 
         result += 'cloud system {\n'
@@ -62,7 +70,29 @@ class ComposePlantuml:
                 if '{0}.{1}'.format(volume, volume_path) in volume_registry:
                     name = volume_registry['{0}.{1}'.format(volume, volume_path)]
                 result += '[{0}] --> {1}\n'.format(service, name)
+
+        if notes:
+            for component_name in sorted(self.components(compose)):
+                if not (self.has_service_external_ports(compose, component_name) or self.has_service_volumes(compose, component_name)):
+                    continue
+                if not self.labels(compose, component_name):
+                    continue
+                labels = []
+                for key, value in self.labels(compose, component_name).items():
+                    labels.append('{0}={1}'.format(key, value))
+                result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
+
         return result.strip()
+
+    @staticmethod
+    def labels(compose, service):
+        service = ComposePlantuml.component(compose, service)
+        if 'labels' not in service:
+            return None
+        if type(service['labels']) is str:
+            key, value = service['labels'].split(':')
+            return {key: value}
+        return service['labels']
 
     @staticmethod
     def group(name, content):
@@ -129,7 +159,14 @@ class ComposePlantuml:
     def components(compose):
         if 'version' not in compose:
             return [component for component in compose]
-        return [component for component in compose.get('services', [])]
+        return [component for component in compose.get('services', {})]
+
+    @staticmethod
+    def component(compose, name):
+        root = compose if 'version' not in compose else compose['services']
+
+        assert name in root
+        return root[name]
 
     @staticmethod
     def links(compose):

@@ -63,6 +63,26 @@ Feature: Link Graph
 
       """
 
+  Scenario: Notes
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        first:
+          labels:
+            key: value
+      """
+    When I run `bin/compose_plantuml --link-graph --notes compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      [first]
+      note top of [first]
+        key=value
+      end note
+
+      """
+
   Scenario: Suppport for legacy docker-compose format
     Given a file named "compose.yml" with:
       """
