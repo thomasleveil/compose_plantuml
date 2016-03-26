@@ -21,6 +21,11 @@ if __name__ == '__main__':
         help='group similar properties together',
         default=False,
     )
+    parser.add_argument(
+        '--notes', action='store_const', const=True,
+        help='utilize notes for displaying additional information',
+        default=False,
+    )
     parser.add_argument('files', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     plantuml = ComposePlantuml()
@@ -33,9 +38,9 @@ if __name__ == '__main__':
         parsed = plantuml.parse(data)
 
         if args.link_graph:
-            print(plantuml.link_graph(parsed))
+            print(plantuml.link_graph(parsed, notes=args.notes))
         if args.boundaries:
-            print(plantuml.boundaries(parsed, args.group))
+            print(plantuml.boundaries(parsed, group=args.group, notes=args.notes))
 
     if len(args.files) == 0:
         execute(sys.stdin.read())

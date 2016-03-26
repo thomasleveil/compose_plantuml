@@ -130,6 +130,35 @@ Feature: Boundaries
 
       """
 
+  Scenario: Notes
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          labels:
+            key:value
+      volumes:
+        service_log: {}
+      """
+    When I run `bin/compose_plantuml --boundaries --notes compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      database service_log {
+        [/log] as volume_1
+      }
+      [service] --> volume_1
+      note top of [service]
+        key=value
+      end note
+      """
+
   Scenario: Suppport for legacy docker-compose format
     Given a file named "compose.yml" with:
       """
