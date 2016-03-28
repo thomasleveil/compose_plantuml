@@ -25,6 +25,14 @@ After that use it like:
 Use it like:
 `cat docker-compose.yml | docker run -i funkwerk/compose_plantuml --link-graph`
 
+For SVG Output, just call:
+
+`cat docker-compose.yml | docker run -i funkwerk/compose_plantuml --link-graph | docker run -i think/plantuml > output.svg`
+
+For PNG Output, just call:
+
+`cat docker-compose.yml | docker run -i funkwerk/compose_plantuml --link-graph | docker run -i think/plantuml -tpng > output.png`
+
 ## Link Graph
 
 Link Graphs provide an overview over docker-compose services.
