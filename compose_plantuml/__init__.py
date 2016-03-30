@@ -78,7 +78,7 @@ class ComposePlantuml:
                 if container is not None:
                     port = '{0} : {1}'.format(host, container)
                 port_links += '[{0}] --> {1}\n'.format(service, port)
-                port_uml += 'interface {0}\n'.format(port)
+                port_uml += 'interface {0}\n'.format(host)
             result += self.group('ports', port_uml) if group else ''
             result += port_links
 
