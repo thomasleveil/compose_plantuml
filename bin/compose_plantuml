@@ -17,8 +17,13 @@ if __name__ == '__main__':
         default=False,
     )
     parser.add_argument(
-        '--group', action='store_const', const=True,
-        help='group similar properties together',
+        '--port_boundaries', action='store_const', const=True,
+        help='prints the port system boundaries',
+        default=False,
+    )
+    parser.add_argument(
+        '--volume_boundaries', action='store_const', const=True,
+        help='prints the port system boundaries',
         default=False,
     )
     parser.add_argument(
@@ -26,11 +31,16 @@ if __name__ == '__main__':
         help='utilize notes for displaying additional information',
         default=False,
     )
+    parser.add_argument(
+        '--group', action='store_const', const=True,
+        help='group similar properties together',
+        default=False,
+    )
     parser.add_argument('files', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     plantuml = ComposePlantuml()
 
-    if not args.link_graph and not args.boundaries:
+    if not args.link_graph and not args.boundaries and not args.port_boundaries and not args.volume_boundaries:
         print('specify an output option. link_graph or boundaries')
         sys.exit(1)
 
@@ -40,7 +50,11 @@ if __name__ == '__main__':
         if args.link_graph:
             print(plantuml.link_graph(parsed, notes=args.notes))
         if args.boundaries:
-            print(plantuml.boundaries(parsed, group=args.group, notes=args.notes))
+            print(plantuml.boundaries(parsed, args.group, notes=args.notes))
+        if args.port_boundaries:
+            print(plantuml.boundaries(parsed, args.group, notes=args.notes, ports=True, volumes=False))
+        if args.volume_boundaries:
+            print(plantuml.boundaries(parsed, args.group, notes=args.notes, ports=False, volumes=True))
 
     if len(args.files) == 0:
         execute(sys.stdin.read())

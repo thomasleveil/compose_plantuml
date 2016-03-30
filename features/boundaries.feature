@@ -104,7 +104,7 @@ Feature: Boundaries
           volumes:
             - service_log:/log
           ports:
-           - 8080:80
+           - 8080
         unused_service: {}
       volumes:
         service_log: {}
@@ -125,7 +125,7 @@ Feature: Boundaries
       package ports {
         interface 8080
       }
-      [service] --> 8080 : 80
+      [service] --> 8080
       [service] --> volume_1
 
       """
@@ -149,14 +149,65 @@ Feature: Boundaries
       skinparam componentStyle uml2
       cloud system {
         [service]
+        note top of [service]
+          key=value
+        end note
       }
       database service_log {
         [/log] as volume_1
       }
       [service] --> volume_1
-      note top of [service]
-        key=value
-      end note
+      """
+
+  Scenario: Ports only
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          ports:
+           - 8080
+      volumes:
+        service_log: {}
+      """
+    When I run `bin/compose_plantuml --port_boundaries compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      [service] --> 8080
+
+      """
+
+  Scenario: Volumes only
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          ports:
+           - 8080
+      volumes:
+        service_log: {}
+      """
+    When I run `bin/compose_plantuml --volume_boundaries compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      database service_log {
+        [/log] as volume_1
+      }
+      [service] --> volume_1
+
       """
 
   Scenario: Suppport for legacy docker-compose format

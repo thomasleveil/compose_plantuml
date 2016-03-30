@@ -29,58 +29,66 @@ class ComposePlantuml:
                     result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
         return result.strip()
 
-    def boundaries(self, compose, group=False, notes=False):
+    def boundaries(self, compose, group=False, ports=True, volumes=True, notes=False):
         result = 'skinparam componentStyle uml2\n'
 
         result += 'cloud system {\n'
         for component in sorted(self.components(compose)):
-            if self.has_service_external_ports(compose, component) or self.has_service_volumes(compose, component):
-                result += '  [{0}]\n'.format(component)
-        result += '}\n'
-        volume_registry = {}
-
-        volume_uml = ''
-        for volume in sorted(self.volumes(compose)):
-            if not self.is_volume_used(compose, volume):
+            relevant = False
+            if ports and self.has_service_external_ports(compose, component):
+                relevant = True
+            if volumes and self.has_service_volumes(compose, component):
+                relevant = True
+            if not relevant:
                 continue
-            volume_uml += 'database {0}'.format(volume) + ' {\n'
-            for path in sorted(self.volume_usage(compose, volume)):
-                id = self.volume_identifier(volume, path)
+            result += '  [{0}]\n'.format(component)
+            if not notes:
+                continue
+            if not self.labels(compose, component):
+                continue
+            labels = []
+            for key, value in self.labels(compose, component).items():
+                labels.append('{0}={1}'.format(key, value))
+            result += '  note top of [{0}]\n    {1}\n  end note\n'.format(component, '\n    '.join(labels))
+        result += '}\n'
+        if volumes:
+            volume_registry = {}
 
-                if id in volume_registry:
+            volume_uml = ''
+            for volume in sorted(self.volumes(compose)):
+                if not self.is_volume_used(compose, volume):
                     continue
-                volume_registry[id] = 'volume_{0}'.format(len(volume_registry.keys()) + 1)
-                volume_uml += '  [{0}] as {1}\n'.format(path, volume_registry[id])
+                volume_uml += 'database {0}'.format(volume) + ' {\n'
+                for path in sorted(self.volume_usage(compose, volume)):
+                    id = self.volume_identifier(volume, path)
 
-            volume_uml += '}\n'
-        result += self.group('volumes', volume_uml) if group else volume_uml
+                    if id in volume_registry:
+                        continue
+                    volume_registry[id] = 'volume_{0}'.format(len(volume_registry.keys()) + 1)
+                    volume_uml += '  [{0}] as {1}\n'.format(path, volume_registry[id])
 
-        port_uml = ''
-        port_links = ''
-        for service, host, container in sorted(self.ports(compose)):
-            port = host if container is None else '{0} : {1}'.format(host, container)
-            port_links += '[{0}] --> {1}\n'.format(service, port)
-            port_uml += 'interface {0}\n'.format(host)
-        result += self.group('ports', port_uml) if group else ''
-        result += port_links
+                volume_uml += '}\n'
+            result += self.group('volumes', volume_uml) if group else volume_uml
 
-        for volume in sorted(self.volumes(compose)):
-            for service, volume_path in sorted(self.service_using_path(compose, volume)):
-                name = volume_path
-                if '{0}.{1}'.format(volume, volume_path) in volume_registry:
-                    name = volume_registry['{0}.{1}'.format(volume, volume_path)]
-                result += '[{0}] --> {1}\n'.format(service, name)
+        if ports:
+            port_uml = ''
+            port_links = ''
+            for service, host, container in sorted(self.ports(compose)):
+                port = host
+                if container is not None:
+                    port = '{0} : {1}'.format(host, container)
+                port_links += '[{0}] --> {1}\n'.format(service, port)
+                port_uml += 'interface {0}\n'.format(port)
+            result += self.group('ports', port_uml) if group else ''
+            result += port_links
 
-        if notes:
-            for component_name in sorted(self.components(compose)):
-                if not (self.has_service_external_ports(compose, component_name) or self.has_service_volumes(compose, component_name)):
-                    continue
-                if not self.labels(compose, component_name):
-                    continue
-                labels = []
-                for key, value in self.labels(compose, component_name).items():
-                    labels.append('{0}={1}'.format(key, value))
-                result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
+        if volumes:
+            for volume in sorted(self.volumes(compose)):
+                for service, volume_path in sorted(self.service_using_path(compose, volume)):
+                    name = volume_path
+                    if '{0}.{1}'.format(volume, volume_path) in volume_registry:
+                        name = volume_registry['{0}.{1}'.format(volume, volume_path)]
+                    result += '[{0}] --> {1}\n'.format(service, name)
 
         return result.strip()
 
