@@ -14,7 +14,7 @@ end
 desc 'Checks style'
 task audit: :rubocop
 task :audit do
-  ignores = %w(D100 D101 D102 D103 E501 I201)
+  ignores = %w(D100 D101 D102 D103 D104 E501 I201)
 
   FILES = FileList[%w(bin/compose_plantuml compose_plantuml/*.py setup.py)]
   sh "flake8 --ignore='#{ignores * ','}' #{FILES}"
