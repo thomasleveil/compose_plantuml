@@ -74,7 +74,7 @@ class ComposePlantuml:
             port_uml = ''
             port_links = ''
             for service, host, container in sorted(self.ports(compose)):
-                port = host
+                port = host.replace('/', '')
                 if container is not None:
                     port = '{0} : {1}'.format(host, container)
                 port_links += '[{0}] --> {1}\n'.format(service, port)

@@ -3,14 +3,14 @@ Feature: Boundaries
   I want to see the boundaries of a system
   so that I know how to interact with it.
 
-  Scenario: Exposed ports
+  Scenario Outline: Exposed ports
     Given a file named "compose.yml" with:
       """
       version: "2"
       services:
         service:
           ports:
-            - 8080
+            - <port>
       """
     When I run `bin/compose_plantuml --boundaries compose.yml`
     Then it should pass with exactly:
@@ -19,29 +19,21 @@ Feature: Boundaries
       cloud system {
         [service]
       }
-      [service] --> 8080
+      [service] --> <resulting port>
 
       """
 
-  Scenario: Alias Ports
-    Given a file named "compose.yml" with:
-      """
-      version: "2"
-      services:
-        service:
-          ports:
-            - 8080:80
-      """
-    When I run `bin/compose_plantuml --boundaries compose.yml`
-    Then it should pass with exactly:
-      """
-      skinparam componentStyle uml2
-      cloud system {
-        [service]
-      }
-      [service] --> 8080 : 80
+    Examples: TCP Port
+      | port | resulting port |
+      | 8080 | 8080           |
 
-      """
+    Examples: UDP Port
+      | port     | resulting port |
+      | 8080/udp | 8080udp        |
+
+    Examples: Alias Port
+      | port    | resulting port |
+      | 8080:80 | 8080 : 80      |
 
   Scenario: Volumes
     Given a file named "compose.yml" with:
