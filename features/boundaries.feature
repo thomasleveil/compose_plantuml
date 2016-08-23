@@ -23,6 +23,26 @@ Feature: Boundaries
 
       """
 
+  Scenario: Exposed UDP ports
+    Given a file named "compose.yml" with:
+      """
+      version: "2"
+      services:
+        service:
+          ports:
+            - 8080/udp
+      """
+    When I run `bin/compose_plantuml --boundaries compose.yml`
+    Then it should pass with exactly:
+      """
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      [service] --> 8080udp
+
+      """
+
   Scenario: Alias Ports
     Given a file named "compose.yml" with:
       """
