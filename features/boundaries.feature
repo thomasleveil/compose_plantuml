@@ -87,7 +87,7 @@ Feature: Boundaries
 
       """
 
-  Scenario: Group Volumes and Ports
+  Scenario Outline: Group Volumes and Ports
     Given a file named "compose.yml" with:
       """
       version: "2"
@@ -96,7 +96,7 @@ Feature: Boundaries
           volumes:
             - service_log:/log
           ports:
-           - 8080:80
+           - <port>:80
         unused_service: {}
       volumes:
         service_log: {}
@@ -115,12 +115,20 @@ Feature: Boundaries
         }
       }
       package ports {
-        interface 8080
+        interface <resulting port>
       }
-      [service] --> 8080 : 80
+      [service] --> <resulting port> : 80
       [service] --> volume_1
 
       """
+
+    Examples: TCP Pport
+      | port | resulting port |
+      | 8080 | 8080           |
+
+    Examples: UDP Pport
+      | port     | resulting port |
+      | 8080/udp | 8080udp        |
 
   Scenario: Notes
     Given a file named "compose.yml" with:
