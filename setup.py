@@ -5,6 +5,7 @@ def readme():
     with open('README.rst') as file:
         return file.read()
 
+
 setup(
     name='compose_plantuml',
     version='0.1.2',
