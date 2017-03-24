@@ -41,7 +41,7 @@ if __name__ == '__main__':
     plantuml = ComposePlantuml()
 
     if not args.link_graph and not args.boundaries and not args.port_boundaries and not args.volume_boundaries:
-        print('specify an output option. e.g.: link_graph or boundaries')
+        print('specify an output option. e.g.: link-graph or boundaries')
         sys.exit(1)
 
     def execute(data):
