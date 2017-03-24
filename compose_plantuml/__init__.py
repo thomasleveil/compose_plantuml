@@ -206,7 +206,7 @@ class ComposePlantuml:
 
         for component_name, component in components.items():
             for port in component.get('ports', []):
-                port = str(port)
+                port = str(port).replace('-', '..')
                 host, container = (port, None)
                 if ':' in port:
                     host, container = port.split(':')
