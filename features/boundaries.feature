@@ -35,6 +35,10 @@ Feature: Boundaries
       | port    | resulting port |
       | 8080:80 | 8080 : 80      |
 
+    Examples: Alias Port
+      | port      | resulting port |
+      | 8000-8099 | 8000..8099     |
+
   Scenario: Volumes
     Given a file named "compose.yml" with:
       """
