@@ -1,0 +1,35 @@
+version: "2"
+services:
+  service1:
+    labels:
+      foo: bar
+  service2:
+    depends_on:
+      - service1
+  service3:
+    links:
+      - service2:alias
+
+---
+options: --traefik_boundaries
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+  }
+
+---
+options: --boundaries
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+  }
+
+---
+options: --link-graph
+expected: |
+  skinparam componentStyle uml2
+  [service1]
+  [service2]
+  [service3]
+  [service3] --> [service2]
+  [service2] ..> [service1] : depends on

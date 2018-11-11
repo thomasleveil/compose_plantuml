@@ -1,0 +1,50 @@
+version: "2"
+services:
+  service:
+    volumes:
+      - service_log:/log
+    ports:
+     - <port>:80
+  unused_service: {}
+volumes:
+  service_log: {}
+  unused_volume: {}
+---
+options: --boundaries
+expected: |
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      database service_log {
+        [/log] as volume_1
+      }
+      [service] --> <resulting port> : 80
+      [service] --> volume_1
+examples:
+  - port: "8080"
+    resulting port: "8080"
+  - port: "8080/udp"
+    resulting port: "8080udp"
+---
+options: --boundaries --group
+expected: |
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      package volumes {
+        database service_log {
+          [/log] as volume_1
+        }
+      }
+      package ports {
+        interface <resulting port>
+      }
+      [service] --> <resulting port> : 80
+      [service] --> volume_1
+examples:
+  - port: "8080"
+    resulting port: "8080"
+  - port: "8080/udp"
+    resulting port: "8080udp"

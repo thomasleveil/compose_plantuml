@@ -1,0 +1,47 @@
+version: "2"
+services:
+  service:
+    labels:
+      traefik.frontend.rule: Host:patate.com
+
+---------
+options:
+expected:
+
+---------
+options: --link-graph
+expected: |
+  skinparam componentStyle uml2
+  [service]
+
+---------
+options: --boundaries
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+    [service]
+  }
+  interface "Host:patate.com" as traefik_rule_0
+  traefik_rule_0 ~~0 [service] : " "
+
+---------
+options: --traefik_boundaries
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+    [service]
+  }
+  interface "Host:patate.com" as traefik_rule_0
+  traefik_rule_0 ~~0 [service] : " "
+
+---------
+options: --traefik_boundaries --group
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+    [service]
+  }
+  package Traefik {
+  interface "Host:patate.com" as traefik_rule_0
+  }
+  traefik_rule_0 ~~0 [service] : " "

@@ -1,0 +1,15 @@
+version: "2"
+services:
+  service:
+    labels:
+      traefik.frontend.rule: Host:www.foo.tld
+
+---------------------------------------------------
+options: --traefik_boundaries
+expected: |
+  skinparam componentStyle uml2
+  cloud system {
+    [service]
+  }
+  interface "Host:www.foo.tld" as traefik_rule_0
+  traefik_rule_0 ~~0 [service] : " "
