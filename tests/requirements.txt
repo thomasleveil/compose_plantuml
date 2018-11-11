@@ -1,0 +1,6 @@
+pytest==3.10.0
+PyYAML==3.13
+plantuml==0.2.1
+requests==2.20.1
+ansi2html==1.5.2
+pytest-html==1.19.0

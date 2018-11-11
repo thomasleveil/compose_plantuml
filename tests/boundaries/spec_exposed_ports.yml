@@ -1,0 +1,22 @@
+      version: "2"
+      services:
+        service:
+          ports:
+            - <port>
+---------------------------------
+options: --boundaries
+expected: |
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      [service] --> <resulting port>
+examples:
+  - port: "8080"
+    resulting port:  "8080"
+  - port: 8080/udp
+    resulting port:  8080udp
+  - port: 8080:80
+    resulting port:  "8080 : 80"
+  - port: 8000-8099
+    resulting port:  8000..8099

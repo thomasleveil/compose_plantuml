@@ -1,0 +1,14 @@
+
+      service:
+        ports:
+          - 8080:80
+
+---------------------------------
+options: --port_boundaries
+expected: |
+
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      [service] --> 8080 : 80

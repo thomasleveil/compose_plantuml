@@ -1,0 +1,20 @@
+
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          ports:
+           - 8080
+      volumes:
+        service_log: {}
+
+---------------------------------
+options: --port_boundaries
+expected: |
+
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      [service] --> 8080

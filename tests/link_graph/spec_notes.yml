@@ -1,0 +1,16 @@
+
+      version: "2"
+      services:
+        first:
+          labels:
+            key: value
+
+---------------------------------
+options: --link-graph --notes
+expected: |
+
+      skinparam componentStyle uml2
+      [first]
+      note top of [first]
+        key=value
+      end note

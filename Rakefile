@@ -2,7 +2,8 @@ task default: :test
 
 task test: :audit
 task :test do
-  sh "PYTHONPATH=#{File.expand_path '.'}:$PYTHONPATH cucumber"
+  sh "PYTHONPATH=#{File.expand_path '.'}:$PYTHONPATH \
+    pytest -vv --html=report.html --self-contained-html"
 end
 
 desc 'Publishes the PyPi'

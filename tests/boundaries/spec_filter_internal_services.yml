@@ -1,0 +1,24 @@
+
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+        unused_service: {}
+      volumes:
+        service_log: {}
+        unused_volume: {}
+
+---------------------------------
+options: --boundaries
+expected: |
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+      }
+      database service_log {
+        [/log] as volume_1
+      }
+      [service] --> volume_1
+
+

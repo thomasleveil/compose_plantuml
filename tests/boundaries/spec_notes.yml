@@ -1,0 +1,28 @@
+
+      version: "2"
+      services:
+        service:
+          volumes:
+            - service_log:/log
+          labels:
+            key: value
+      volumes:
+        service_log: {}
+
+---------------------------------
+options: --boundaries --notes
+expected: |
+
+      skinparam componentStyle uml2
+      cloud system {
+        [service]
+        note top of [service]
+          key=value
+        end note
+      }
+      database service_log {
+        [/log] as volume_1
+      }
+      [service] --> volume_1
+
+

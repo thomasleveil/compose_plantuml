@@ -1,0 +1,16 @@
+
+      version: "2"
+      services:
+        first:
+          links:
+            - second:second_alias
+        second: {}
+
+---------------------------------
+options: --link-graph
+expected: |
+
+      skinparam componentStyle uml2
+      [first]
+      [second]
+      [first] --> [second]

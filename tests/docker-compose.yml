@@ -1,0 +1,28 @@
+# Docker compose file which runs the test suite
+
+version: "3.6"
+
+services:
+
+  # PlantUML server able to render images from UML text
+  plantuml:
+    image: plantuml/plantuml-server:jetty
+    expose:
+      - 8080
+    labels:
+      traefik.enable: "true"
+      traefik.port: 8080
+
+
+  test:
+    build: .
+    depends_on:
+      - plantuml
+    volumes:
+      - ../:/src:ro
+      - ./results:/results
+    environment:
+      PLANTUML_SERVER: http://plantuml:8080/
+    tmpfs:
+      - /src/.pytest_cache
+    command: -vv --html=/results/report.html --self-contained-html
