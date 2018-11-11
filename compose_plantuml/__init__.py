@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
+import re
+from collections import namedtuple
+from functools import wraps
+
 from yaml import load
+
+
+def uml_lines(func):
+    @wraps(func)
+    def wrapper(*args, **kwds):
+        lines = func(*args, **kwds)
+        return "\n".join(lines)
+
+    return wrapper
 
 
 class ComposePlantuml:
@@ -29,7 +42,8 @@ class ComposePlantuml:
                     result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
         return result.strip()
 
-    def boundaries(self, compose, group=False, ports=True, volumes=True, notes=False):
+    def boundaries(self, compose, group=False, ports=True, volumes=True, traefik=True, notes=False):
+        traefik_parser = TraefikParser(compose)
         result = 'skinparam componentStyle uml2\n'
 
         result += 'cloud system {\n'
@@ -38,6 +52,8 @@ class ComposePlantuml:
             if ports and self.has_service_external_ports(compose, component):
                 relevant = True
             if volumes and self.has_service_volumes(compose, component):
+                relevant = True
+            if traefik and traefik_parser.has_service_traefik_rule(component):
                 relevant = True
             if not relevant:
                 continue
@@ -91,6 +107,9 @@ class ComposePlantuml:
                     if '{0}.{1}'.format(volume, volume_path) in volume_registry:
                         name = volume_registry['{0}.{1}'.format(volume, volume_path)]
                     result += '[{0}] --> {1}\n'.format(service, name)
+
+        if traefik:
+            result += traefik_parser.uml(group)
 
         return result.strip()
 
@@ -244,3 +263,66 @@ class ComposePlantuml:
                     continue
                 result.append((component_name, volume_name.split(':')[1]))
         return result
+
+
+TraefikRule = namedtuple('TraefikRule', ['service', 'rule', 'segment'])
+
+
+class TraefikParser:
+    re_traefik_rule = re.compile(r'''^traefik\.(?:(?P<segment_name>[^.]+)\.)?frontend.rule$''')
+
+    def __init__(self, compose):
+        self.rules = None
+        self.connections = None
+        self.services = set()
+        self._take_inventory(compose)
+
+    def _take_inventory(self, compose):
+        _rules = set()
+        _connections = set()
+
+        for rule_info in TraefikParser._rules_extractor(compose):
+            _rules.add(rule_info.rule)
+            _connections.add((rule_info.rule, (rule_info.service, rule_info.segment)))
+            self.services.add(rule_info.service)
+
+        self.rules = sorted(list(_rules))
+        self.connections = []
+        for rule, destination in _connections:
+            self.connections.append((self.rules.index(rule), destination))
+
+    @staticmethod
+    def _rules_extractor(compose):
+        components = compose if 'version' not in compose else compose.get('services', {})
+
+        for component_name, component in components.items():
+            labels_dict = (component or {}).get('labels', {})
+            if not isinstance(labels_dict, dict):
+                raise ValueError("Incorrect yml format. `labels:` should be a dict. Got <{}> {!r}".format(
+                    labels_dict.__class__.__name__, labels_dict)
+                )
+            for label_key, label_value in labels_dict.items():
+                m = TraefikParser.re_traefik_rule.match(label_key)
+                if m:
+                    rule = label_value
+                    yield TraefikRule(component_name, rule, m.group('segment_name') or " ")
+
+    def has_service_traefik_rule(self, service):
+        return service in self.services
+
+    def uml_for_rules(self):
+        return ['interface "{}" as traefik_rule_{}'.format(rule, index) for index, rule in enumerate(self.rules)]
+
+    def uml_for_connections(self):
+        return sorted(['traefik_rule_{} ~~0 [{}] : "{}"'.format(rule_index, service, segment) for
+                       rule_index, (service, segment) in self.connections])
+
+    @uml_lines
+    def uml(self, group=False):
+        if group and len(self.uml_for_rules()):
+            return ["package Traefik {"] \
+                   + self.uml_for_rules() \
+                   + ["}"] \
+                   + self.uml_for_connections()
+        else:
+            return self.uml_for_rules() + self.uml_for_connections()
