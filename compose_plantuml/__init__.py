@@ -2,8 +2,11 @@
 import re
 from collections import namedtuple
 from functools import wraps
+from typing import Generator, List, Union, Dict, Hashable, Any
 
 from yaml import load
+
+Compose = Union[Dict[Hashable, Any], list, None]
 
 
 def uml_lines(func):
@@ -20,10 +23,10 @@ class ComposePlantuml:
     def __init__(self):
         pass
 
-    def parse(self, data):
+    def parse(self, data) -> Compose:
         return load(data)
 
-    def link_graph(self, compose, notes=False):
+    def link_graph(self, compose: Compose, notes: bool = False):
         result = 'skinparam componentStyle uml2\n'
 
         for component in sorted(self.components(compose)):
@@ -42,7 +45,15 @@ class ComposePlantuml:
                     result += 'note top of [{0}]\n  {1}\nend note\n'.format(component_name, '\n  '.join(labels))
         return result.strip()
 
-    def boundaries(self, compose, group=False, ports=True, volumes=True, traefik=True, notes=False):
+    def boundaries(
+            self,
+            compose: Compose,
+            group: bool = False,
+            ports: bool = True,
+            volumes: bool = True,
+            traefik: bool = True,
+            notes: bool = False
+    ):
         traefik_parser = TraefikParser(compose)
         result = 'skinparam componentStyle uml2\n'
 
@@ -114,7 +125,7 @@ class ComposePlantuml:
         return result.strip()
 
     @staticmethod
-    def labels(compose, service):
+    def labels(compose: Compose, service: str):
         service = ComposePlantuml.component(compose, service)
         if 'labels' not in service:
             return None
@@ -130,7 +141,7 @@ class ComposePlantuml:
         return 'package {0} '.format(name) + '{\n  ' + '\n  '.join(content.split('\n')).strip() + '\n}\n'
 
     @staticmethod
-    def is_volume_used(compose, volume):
+    def is_volume_used(compose: Compose, volume):
         components = compose if 'version' not in compose else compose.get('services', {})
 
         for _, component in components.items():
@@ -140,7 +151,7 @@ class ComposePlantuml:
         return False
 
     @staticmethod
-    def is_service_used(compose, service):
+    def is_service_used(compose: Compose, service):
         components = compose if 'version' not in compose else compose.get('services', {})
 
         for _, component in components.items():
@@ -155,7 +166,7 @@ class ComposePlantuml:
         return False
 
     @staticmethod
-    def has_service_external_ports(compose, service):
+    def has_service_external_ports(compose: Compose, service):
         components = compose if 'version' not in compose else compose.get('services', {})
 
         for name, component in components.items():
@@ -165,7 +176,7 @@ class ComposePlantuml:
         return False
 
     @staticmethod
-    def has_service_volumes(compose, service):
+    def has_service_volumes(compose: Compose, service):
         components = compose if 'version' not in compose else compose.get('services', {})
 
         for name, component in components.items():
@@ -185,20 +196,20 @@ class ComposePlantuml:
         return '{0}.{1}'.format(volume, path)
 
     @staticmethod
-    def components(compose):
+    def components(compose: Compose):
         if 'version' not in compose:
             return [component for component in compose]
         return [component for component in compose.get('services', {})]
 
     @staticmethod
-    def component(compose, name):
+    def component(compose: Compose, name):
         root = compose if 'version' not in compose else compose['services']
 
         assert name in root
         return root[name]
 
     @staticmethod
-    def links(compose):
+    def links(compose: Compose):
         result = []
         components = compose if 'version' not in compose else compose.get('services', {})
 
@@ -209,7 +220,7 @@ class ComposePlantuml:
         return result
 
     @staticmethod
-    def dependencies(compose):
+    def dependencies(compose: Compose):
         result = []
         components = compose if 'version' not in compose else compose.get('services', {})
 
@@ -219,7 +230,7 @@ class ComposePlantuml:
         return result
 
     @staticmethod
-    def ports(compose):
+    def ports(compose: Compose):
         result = []
         components = compose if 'version' not in compose else compose.get('services', {})
 
@@ -233,7 +244,7 @@ class ComposePlantuml:
         return result
 
     @staticmethod
-    def volumes(compose):
+    def volumes(compose: Compose):
         if 'version' not in compose:
             return []  # TODO: support for version 1
         volumes = compose.get('volumes', {})
@@ -241,7 +252,7 @@ class ComposePlantuml:
         return list(volumes.keys())
 
     @staticmethod
-    def volume_usage(compose, volume):
+    def volume_usage(compose: Compose, volume):
         result = []
         components = compose if 'version' not in compose else compose.get('services', {})
 
@@ -253,7 +264,7 @@ class ComposePlantuml:
         return result
 
     @staticmethod
-    def service_using_path(compose, volume):
+    def service_using_path(compose: Compose, volume):
         result = []
         components = compose if 'version' not in compose else compose.get('services', {})
 
@@ -271,13 +282,13 @@ TraefikRule = namedtuple('TraefikRule', ['service', 'rule', 'segment'])
 class TraefikParser:
     re_traefik_rule = re.compile(r'''^traefik\.(?:(?P<segment_name>[^.]+)\.)?frontend.rule$''')
 
-    def __init__(self, compose):
+    def __init__(self, compose: Compose):
         self.rules = None
         self.connections = None
         self.services = set()
         self._take_inventory(compose)
 
-    def _take_inventory(self, compose):
+    def _take_inventory(self, compose: Compose) -> None:
         _rules = set()
         _connections = set()
 
@@ -292,7 +303,7 @@ class TraefikParser:
             self.connections.append((self.rules.index(rule), destination))
 
     @staticmethod
-    def _rules_extractor(compose):
+    def _rules_extractor(compose: Compose) -> Generator[TraefikRule, None, None]:
         components = compose if 'version' not in compose else compose.get('services', {})
 
         for component_name, component in components.items():
@@ -307,18 +318,18 @@ class TraefikParser:
                     rule = label_value
                     yield TraefikRule(component_name, rule, m.group('segment_name') or " ")
 
-    def has_service_traefik_rule(self, service):
-        return service in self.services
+    def has_service_traefik_rule(self, service_name: str) -> bool:
+        return service_name in self.services
 
-    def uml_for_rules(self):
+    def uml_for_rules(self) -> List[str]:
         return ['interface "{}" as traefik_rule_{}'.format(rule, index) for index, rule in enumerate(self.rules)]
 
-    def uml_for_connections(self):
+    def uml_for_connections(self) -> List[str]:
         return sorted(['traefik_rule_{} ~~0 [{}] : "{}"'.format(rule_index, service, segment) for
                        rule_index, (service, segment) in self.connections])
 
     @uml_lines
-    def uml(self, group=False):
+    def uml(self, group: bool = False) -> List[str]:
         if group and len(self.uml_for_rules()):
             return ["package Traefik {"] \
                    + self.uml_for_rules() \
